@@ -46,7 +46,7 @@ num_eminies = 6
 for i in range(num_eminies):
     fight_img.append(pygame.image.load('flight.png'))
     fightx.append(random.randint(0, 736))
-    fighty.append(random.randint(0, 300))
+    fighty.append(random.randint(0, 200))
     fightx_change.append(1)
     fighty_change.append(30)
 
@@ -55,11 +55,28 @@ bullet_img = pygame.image.load('bullet.png')
 bulletx = 0
 bullety = 500
 bulletx_change = 0
-bullety_change = 3
+bullety_change = 4
 bullet_state = "ready"
+
+# enemy bullet
+bull_img = []
+bullx = []
+bully = []
+bullx_change = []
+bully_change = []
+bull_status = []
+num_eminies = 6
+for i in range(num_eminies):
+    bull_img.append(pygame.image.load('enemy_bullet.png'))
+    bullx.append(0)
+    bully.append(0)
+    bullx_change.append(0)
+    bully_change.append(2)
+    bull_status.append(False)
 
 # scoring
 score = 0
+life = 5
 font = pygame.font.Font('freesansbold.ttf', 36)
 textx = 10
 texty = 10
@@ -89,6 +106,10 @@ def bullet(x, y):
     screen.blit(bullet_img, (x+16, y+10))
 
 
+def enemy_bul(i, x, y):
+    screen.blit(bull_img[i], (x+19, y+10))
+
+
 def collide(fightx, fighty, bulletx, bullety):
     dist = math.sqrt(math.pow(fightx-bulletx, 2) + math.pow(fighty-bullety, 2))
     if dist < 27:
@@ -97,9 +118,11 @@ def collide(fightx, fighty, bulletx, bullety):
         return False
 
 
-def scoring(x, y):
+def scoring(x, y, a, b):
     score_ = font.render("SCORE: " + str(score), True, (255, 255, 255))
     screen.blit(score_, (x, y))
+    life_ = font.render("LIFE: " + str(life), True, (255, 255, 255))
+    screen.blit(life_, (a, b))
 
 
 def game_over(score):
@@ -110,109 +133,146 @@ def game_over(score):
     screen.blit(final, (130, 200))
 
 
+game = True
 # main function
 while True:
-    screen.fill(pygame.Color("blue"))  # the backgound
-    if score % 10 == 0 and score != 0:
-        change = not(change)
-    if change:
-        screen.blit(background, (0, 0))  # background image for morning
-    else:
-        screen.blit(background2, (0, 0))  # background image for night sky
-
-    # all the keyboard events
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_LEFT:
-                playerx_change = -2
-            if event.key == pygame.K_RIGHT:
-                playerx_change = 2
-            if event.key == pygame.K_SPACE:
-                if bullet_state is "ready":
-                    # get the current x coordinate
-                    bullet_sound = mixer.Sound('bullet.mp3')
-                    bullet_sound.play()
-                    bulletx = playerx
-                    bullet(bulletx, bullety)
+    while game:
+        screen.fill(pygame.Color("blue"))  # the backgound
+        if score % 10 == 0 and score != 0:
+            change = not(change)
+        if change:
+            screen.blit(background, (0, 0))  # background image for morning
+        else:
+            screen.blit(background2, (0, 0))  # background image for night sky
 
-        if event.type == pygame.KEYUP:
-            if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
-                playerx_change = 0
+        # all the keyboard events
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:
+                    playerx_change = -2
+                if event.key == pygame.K_RIGHT:
+                    playerx_change = 2
+                if event.key == pygame.K_SPACE:
+                    if bullet_state is "ready":
+                        # get the current x coordinate
+                        bullet_sound = mixer.Sound('bullet.mp3')
+                        bullet_sound.play()
+                        bulletx = playerx
+                        bullet(bulletx, bullety)
 
-    # managing the events
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
+                    playerx_change = 0
 
-    # 1. player movement
-    playerx += playerx_change
-    if playerx < 0:
-        playerx = 0
-    if playerx > 736:
-        playerx = 736
+        # managing the events
 
-    # 2. cloud movement
-    for i in range(no_cloud):
-        cloudx[i] += cloudx_change[i]
-        if cloudx[i] < 0:
-            cloudx_change[i] = 0.3
-            cloudy[i] += cloudy_change[i]
-            if cloudy[i] > 600:
-                cloudy[i] = random.randint(20, 200)
-        elif cloudx[i] > 736:
-            cloudx_change[i] = -0.3
-            cloudy[i] += cloudy_change[i]
-            if cloudy[i] > 600:
-                cloudy[i] = random.randint(20, 200)
-        cloud(cloudx[i], cloudy[i], i)  # calling the cloud
+        # 1. player movement
+        playerx += playerx_change
+        if playerx < 0:
+            playerx = 0
+        if playerx > 736:
+            playerx = 736
 
-    # 3. bullet movement
-    if bullety < 0:  # restoring the bullet to the plane after it disappears from the screen
-        bullety = 500
-        bullet_state = "ready"
+        # 2. cloud movement
+        for i in range(4):
+            cloudx[i] += cloudx_change[i]
+            if cloudx[i] < 0:
+                cloudx_change[i] = 0.3
+                cloudy[i] += cloudy_change[i]
+                if cloudy[i] > 600:
+                    cloudy[i] = random.randint(20, 200)
+            elif cloudx[i] > 736:
+                cloudx_change[i] = -0.3
+                cloudy[i] += cloudy_change[i]
+                if cloudy[i] > 600:
+                    cloudy[i] = random.randint(20, 200)
+            cloud(cloudx[i], cloudy[i], i)  # calling the cloud function
 
-    if bullet_state is "fired":     # to continue seeing the shot bullet travell, after triggered via sapcebar
-        bullet(bulletx, bullety)    # or else the bullet disappears
-        # this will show the bullet travell by changing the y coordinate
-        bullety -= bullety_change
-
-    # 4. fighter jet movement
-    for i in range(num_eminies):
-
-        # game over condition -if the planes reaches a particular point we call it over
-        if fighty[i] > 430:
-            for j in range(num_eminies):
-                fighty[i] = 2000
-            game_over(score)
-            break
-
-        # fixing the enemy fighter jet movement
-        fightx[i] += fightx_change[i]      # move horizontally
-        if fightx[i] < 0:                  # at left most side
-            fighty[i] += fighty_change[i]   # changes vertical level
-            fightx_change[i] = 1            # starts moving towards right
-            # if vertical position is too low then reset the enemy to the top of the screen but this is optional as this end condition
-            if fighty[i] > 600:
-                fighty[i] = random.randint(0, 300)
-        elif fightx[i] > 736:           # at right most side
-            fighty[i] += fighty_change[i]   # changes vertical level
-            fightx_change[i] = -1           # starts moving towards right
-            # if vertical position is too low then reset the enemy to the top of the screen but this is optional as this end condition
-            if fighty[i] > 600:
-                fighty[i] = random.randint(0, 300)
-
-        # 5. collision of bulet with the particular fighter jet
-        collision = collide(fightx[i], fighty[i], bulletx, bullety)
-        if collision:
-            explode_sound = mixer.Sound('explode.wav')
-            explode_sound.play()
+        # 3. bullet movement
+        if bullety < 0:  # restoring the bullet to the plane after it disappears from the screen
             bullety = 500
             bullet_state = "ready"
-            score += 1
-            fightx[i] = random.randint(0, 736)
-            fighty[i] = random.randint(0, 200)
 
-        fight(fightx[i], fighty[i], i)  # calling the fighter plane
+        if bullet_state is "fired":     # to continue seeing the shot bullet travell, after triggered via sapcebar
+            bullet(bulletx, bullety)    # or else the bullet disappears
+            # this will show the bullet travell by changing the y coordinate
+            bullety -= bullety_change
 
-    player(playerx, playery)  # callig the player function
-    scoring(textx, texty)
+        # 4. fighter jet movement
+        for i in range(num_eminies):
+
+            # fixing the enemy fighter jet movement
+            fightx[i] += fightx_change[i]      # move horizontally
+            if fightx[i] < 0:                  # at left most side
+                fighty[i] += fighty_change[i]   # changes vertical level
+                fightx_change[i] = 1            # starts moving towards right
+                # if vertical position is too low then reset the enemy to the top of the screen but this is optional as this end condition
+                if fighty[i] > 600:
+                    fighty[i] = random.randint(0, 200)
+            elif fightx[i] > 736:           # at right most side
+                fighty[i] += fighty_change[i]   # changes vertical level
+                fightx_change[i] = -1           # starts moving towards right
+                # if vertical position is too low then reset the enemy to the top of the screen but this is optional as this end condition
+                if fighty[i] > 600:
+                    fighty[i] = random.randint(0, 200)
+
+            # if a plane's bullet has disappeared from the screen then generate another bullet
+            if bull_status[i] == False:
+                bull_status[i] = True
+                bullx[i] = fightx[i]
+                bully[i] = fighty[i]
+                enemy_bul(i, bullx[i], bully[i])
+
+            # 5. collision of bulet with the particular fighter jet
+            bullet_to_enemy_collision = collide(
+                fightx[i], fighty[i], bulletx, bullety)
+            if bullet_to_enemy_collision:
+                explode_sound = mixer.Sound('explode.wav')
+                explode_sound.play()
+                bullety = 500
+                bullet_state = "ready"
+                score += 1
+                fightx[i] = random.randint(0, 736)
+                fighty[i] = random.randint(0, 200)
+
+            # game over condition -if fighter collides with player plane or bullet hits player
+            killme = collide(playerx, playery, bullx[i], bully[i])
+            jet_collide = collide(fightx[i], fighty[i], playerx, playery)
+            if killme or jet_collide:
+                life = life - 1
+                bull_status[i] = True
+                bullx[i] = fightx[i]
+                bully[i] = fighty[i]
+                enemy_bul(i, bullx[i], bully[i])
+                if life == 0:
+                    for j in range(num_eminies):
+                        bully[j] = -2000
+                        bull_status[j] = False
+                        fighty[j] = 2000
+                    playery = 2000
+                    game_over(score)
+                    game = False
+                    break
+
+            fight(fightx[i], fighty[i], i)  # calling the fighter plane
+
+        for i in range(num_eminies):
+            if bull_status[i] == True:
+                if bully[i] > 600:  # restoring the bullet to the enemy after it disappears from the screen
+                    bully[i] = fighty[i]
+                    bullx[i] = fightx[i]
+                    bull_status[i] = False
+                # the enemy bullets travelling
+                enemy_bul(i, bullx[i], bully[i])
+                bully[i] += bully_change[i]
+
+        player(playerx, playery)  # callig the player function
+        scoring(textx, texty, 640, 10)
+        pygame.display.update()
+    game_over(score)
     pygame.display.update()
